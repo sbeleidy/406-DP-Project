@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>README</title>
+<title>Dynamic Programming Project</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -11751,13 +11751,13 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Algorithms---Dynamic-Programming-Project">Algorithms - Dynamic Programming Project<a class="anchor-link" href="#Algorithms---Dynamic-Programming-Project">&#182;</a></h1><p>Authors:</p>
+<p>Authors:</p>
 <ol>
 <li>Hanna Barringer</li>
 <li>Saad Elbeleidy</li>
 <li>Austin Leo</li>
 </ol>
-<h2 id="Problem">Problem<a class="anchor-link" href="#Problem">&#182;</a></h2><p>The Astronomy club is faced with the following algorithmic problem. There are <code>n</code> consecutive astronomical events they could observe on a particular night that occur exactly one minute apart. Thus event <code>j</code> occurs at minute j. Also, event <code>j</code> occurs at integer coordinate <code>d_j</code> in the sky (we’re assuming the sky is one-dimensional). The telescope’s initial position at minute 0 is assumed to be coordinate 0 and the club is required to observe the last event <code>n</code> (occurring at minute <code>n</code>). The catch here is that the telescope can only be moved one coordinate per minute. So, at minute 1, the telescope can be moved to coordinate location 1 or −1 (or it could remain at location 0).</p>
+<h1 id="Problem">Problem<a class="anchor-link" href="#Problem">&#182;</a></h1><p>The Astronomy club is faced with the following algorithmic problem. There are <code>n</code> consecutive astronomical events they could observe on a particular night that occur exactly one minute apart. Thus event <code>j</code> occurs at minute j. Also, event <code>j</code> occurs at integer coordinate <code>d_j</code> in the sky (we’re assuming the sky is one-dimensional). The telescope’s initial position at minute 0 is assumed to be coordinate 0 and the club is required to observe the last event <code>n</code> (occurring at minute <code>n</code>). The catch here is that the telescope can only be moved one coordinate per minute. So, at minute 1, the telescope can be moved to coordinate location 1 or −1 (or it could remain at location 0).</p>
 <p>The optimization problem you have to solve is: given the coordinates of each of the <code>n</code> events, find a viewable subset of maximum size, subject to the requirement that it should contain event <code>n</code>.</p>
 <p>Example:</p>
 <p>In the example below, the optimal solution is to observe events <code>{1,3,6,9}</code>. Note that the telescope has time to move from one event in this set to the next event moving at one coordinate location per minute:</p>
@@ -11790,13 +11790,129 @@ div#notebook {
 </tr>
 </tbody>
 </table>
-<h2 id="Solution-Approach">Solution Approach<a class="anchor-link" href="#Solution-Approach">&#182;</a></h2>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Solution-Approach">Solution Approach<a class="anchor-link" href="#Solution-Approach">&#182;</a></h1><p>The algorithm begins by first by creating two lists, <em>allPossibleFromStart</em> and <em>allPossibleFromEnd</em>, which will be used to store the possible solutions generated. Generating the lists begins by taking a subset of the list of events <em>C</em> starting with the first element and adding the next element each iteration.</p>
+<h2 id="Initial-List-Generation">Initial List Generation<a class="anchor-link" href="#Initial-List-Generation">&#182;</a></h2><p>Given a sample set <em>C</em> of [0, 1, 2, 3]:</p>
+
+<pre><code>Subset 1: [0]
+Subset 2: [0, 1]
+Subset 3: [0, 1, 2]
+Subset 4: [0, 1, 2, 3]
+
+</code></pre>
+<p><em>allPossibleFromStart</em> will begin at the first element of the subset and begin at the initial coordinate position of the telescope, 0. The telescope may only move at maximum 1 coordinate per minute and the iteration of each subset will check that the proceding elements can be reached by the telescope in time. If the telescope can possibly see the event it is appeneded to the current list as <code>True</code>. Once the subset has been processed the current list is appeneded to <em>allPossibleFromStart</em>.</p>
+<p>For example, the telescope begins at position 0 and may only reach either coordinate -1 or 1 by the next minute. By minute 2, the telescope can see events from coordinate -2 to 2 and if the event at this time is within these bounds it will be <code>True</code>. However, if there is an event <em>j</em> at coordinate 5 by minute 3 the telescope cannot possibly reach <em>j</em> from its starting position and therefore will have a <code>False</code> added.</p>
+<p><em>allPossibleFromEnd</em> will repeat this process, but rather than starting from the first element and the telescope's initial position of 0, it will begin at the position and coordinate of the last event in the subset. This will guarantee that the last event in the subset is observed.</p>
+<p>Once both lists have been generated they are <em>AND</em>ed together and assigned to a new list <em>allPossibleFromStartAndEnd</em>. This list will contain all solutions of events that can be reached by the telescope in time and additionally observe the last event.</p>
+<h2 id="Determining-The-Solution-From-List">Determining The Solution From List<a class="anchor-link" href="#Determining-The-Solution-From-List">&#182;</a></h2><p>From <em>allPossibleFromStartAndEnd</em>, a list of the <em>bestCases</em> of each solution will be generated. This is where the recursive relation occurs. Using <em>allPossibleFromStartAndEnd</em> we take each list <em>s</em> and create a new list that is the length <em>l</em> of <em>s</em> of <em>l - 1</em> <code>False</code>s and a single <code>True</code> at the end. This signifies that the last astronomical event has been seen. We then iterate through <em>s</em> starting from the end moving towards the front. As we move towards the front we will add the elements to our best case list for that subset. If a <code>True</code> is seen at position <em>i</em> we will follow a new procedure.</p>
+<p>Keep in mind that the <em>bestCases</em> lists all the best cases for the subset of that length. We will compare our current subset to the corresponding <em>bestCases</em> subset of length <em>i</em> and if the element in <em>s</em> is <code>True</code> at <em>i</em> the remaining elements in <em>s</em> will be replaced by the <em>bestCases</em> subset. By storing the best case of each subset we can avoid recalculating the remaining elements of <em>s</em> if we reach a <code>True</code> by substituting in the best case subset of that length. This subset is added as the next list in our <em>bestCases</em> until we have fully processed <em>allPossibleFromStartAndEnd</em>. The final best case is the solution.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Psudocode">Psudocode<a class="anchor-link" href="#Psudocode">&#182;</a></h1><p>Assume <em>C</em> is the list of coordinates for the astronomical events with the indices <em>j</em> being the minute they each occur at.</p>
+
+<pre><code>global allPossibleFromStart
+global allPossibleFromEnd
+
+def getAllPossibilites(C):
+    n = length(C)
+    possibleStart = []
+    for i = 1 to n:
+        check to see if event C[i] is within abs(i) of the starting position
+        if it is:
+            possibleStart.append(True)
+        else:
+            possibleStart.append(False)
+
+    allPossibleFromStart = possibleStart
+
+    for i = 1 to n:
+        check to see if event C[i] is within abs(n-i) of the end event position
+        if it is:
+            possibleEnd.append(True)
+        else:
+            possibleEnd.append(False)
+
+        allPossibleFromEnd.append(possibleEnd)
+
+        for p = 1 to len(possibleEnd)
+            if possibleEnd[p] == true
+                getAllPossibilites(possibleEnd(C[:p]))
+                #Recursively call with fewer elements of C
+
+
+getAllPossibilities(C)
+
+compare allPossibleFromStart and allPossibleFromEnd
+allPossibleFromStartAndEnd = elements in common of the two
+bestCases = list of n elements for each subset
+
+for index s, subset subgroup in allPossibleFromStartAndEnd:
+    if bestCases has not been initialized:
+        bestCases[s] = list of s Falses + True
+        # No events have been seen except the last
+
+        for index e, subset event in subgroup:
+            if we have not reached the end and an event has been witnessed:
+                substitute elements from the previous bestCases subset
+                of length e into current subset
+
+                if there are more events witnessed in current subset:
+                    bestCases[s] = current subset
+
+return the last element in bestCases</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Traceback-Algorithm">Traceback Algorithm<a class="anchor-link" href="#Traceback-Algorithm">&#182;</a></h1><p>Based on our implementation, the traceback algorithm is simply the reverse of the solution that is returned. Since solutions are developed by copying the previous item's best path, every "True" value is on the path of how to reach the solution. It is therefore the traceback path to the solution.</p>
+<h1 id="Complexity-Analysis">Complexity Analysis<a class="anchor-link" href="#Complexity-Analysis">&#182;</a></h1><p>The algorithm is split into the following components:</p>
+<ol>
+<li>List Generation O(n^2)<ol>
+<li>Reachable From Start (O(n))</li>
+<li>Reachable From End (O(n^2))</li>
+<li>Combining Reachable States (O(n^2))</li>
+</ol>
+</li>
+<li>Solving (O(n^2))</li>
+</ol>
+<p>These components result in a combined complexity of the algorithm at O(n^2).</p>
+<p>Details about the breakdown of the complexity for each component are available in the comments of the implementation section below.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Implementation">Implementation<a class="anchor-link" href="#Implementation">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[112]:</div>
+<div class="prompt input_prompt">In&nbsp;[64]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">allPossibleFromEnd</span> <span class="o">=</span> <span class="p">[]</span>
@@ -11808,10 +11924,11 @@ div#notebook {
     <span class="n">allPossibleFromStart</span> <span class="o">=</span> <span class="p">[]</span>
     
 
-<span class="k">def</span> <span class="nf">getPossibilities</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">getPossibilities</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span> <span class="c1"># Total of O(n^2)</span>
+<span class="c1">#     Get the possible values that are reachable from start and end</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
-    <span class="n">minsEnd</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-    <span class="n">maxsEnd</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">minsEnd</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># O(n)</span>
+    <span class="n">maxsEnd</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">C</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="c1"># O(n)</span>
     <span class="n">minsStart</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
     <span class="n">maxsStart</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
     
@@ -11824,7 +11941,9 @@ div#notebook {
         <span class="nb">print</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">maxsStart</span><span class="p">)</span>
     
-    <span class="n">possibleEnd</span> <span class="o">=</span> <span class="p">[(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">minsEnd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">maxsEnd</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">possibleEnd</span> <span class="o">=</span> <span class="p">[(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">minsEnd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="ow">and</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">maxsEnd</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="c1"># O(n)</span>
     
     <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">possibleEnd</span><span class="p">)</span>
@@ -11835,30 +11954,42 @@ div#notebook {
         
     <span class="k">global</span> <span class="n">allPossibleFromStart</span>
     <span class="k">if</span> <span class="n">allPossibleFromStart</span> <span class="o">==</span> <span class="p">[]:</span>
-        <span class="n">allPossibleFromStart</span> <span class="o">=</span> <span class="p">[(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">minsStart</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">maxsStart</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+        <span class="n">allPossibleFromStart</span> <span class="o">=</span> <span class="p">[(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">minsStart</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> 
+                                 <span class="ow">and</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">maxsStart</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
         
     <span class="n">allPossibleFromEnd</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">possibleEnd</span>
     
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">possibleEnd</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">possibleEnd</span><span class="p">[</span><span class="n">p</span><span class="p">]:</span>
             <span class="n">getPossibilities</span><span class="p">(</span><span class="n">C</span><span class="p">[:</span><span class="n">p</span><span class="p">])</span>
+            <span class="c1"># This part leads to the O(n^2) portion</span>
     
 
-<span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span> <span class="c1"># Total of O(n^2)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
     <span class="n">getPossibilities</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
     <span class="k">global</span> <span class="n">allPossibleFromStart</span><span class="p">,</span> <span class="n">allPossibleFromEnd</span>
     
     <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All possible form start&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">allPossibleFromStart</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All possible from end&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">allPossibleFromEnd</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
     
-    <span class="n">possibleFromStartAndEnd</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">allPossibleFromStart</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">allPossibleFromEnd</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-
+<span class="c1">#     Create the table of all posibilities of </span>
+<span class="c1">#     being reached from both start and end</span>
+    <span class="n">possibleFromStartAndEnd</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">allPossibleFromStart</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                                 <span class="ow">and</span> <span class="n">allPossibleFromEnd</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> 
+                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+                               <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="c1"># O(n^2)</span>
+    
+    
     <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Possible from start and end&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">possibleFromStartAndEnd</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
@@ -11866,11 +11997,38 @@ div#notebook {
         <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">possibleFromStartAndEnd</span><span class="p">]</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
+        
+<span class="c1">#     Find all possible solutions</span>
+
+    <span class="n">bestCases</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">n</span>
     
-    <span class="n">solution</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">possibleFromStartAndEnd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="c1"># This portion takes O(n^2)</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">subgroup</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">possibleFromStartAndEnd</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">bestCases</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">bestCases</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subgroup</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">e</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">subgroup</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">event</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">bestCases</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">bestCases</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+                
+                <span class="n">potentialSolution</span> <span class="o">=</span> <span class="n">bestCases</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">s</span><span class="o">-</span><span class="n">e</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> \
+                <span class="o">+</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">potentialSolution</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">sum</span><span class="p">(</span><span class="n">bestCases</span><span class="p">[</span><span class="n">s</span><span class="p">]):</span>
+                    <span class="n">bestCases</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">potentialSolution</span>
+
+    
+    <span class="n">solution</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">bestCases</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    
+    <span class="n">traceback</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+    <span class="n">traceback</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
     
     <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solution:&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Traceback:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">traceback</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
         
     <span class="k">return</span> <span class="n">solution</span>
@@ -11886,13 +12044,13 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Some-Examples">Some Examples<a class="anchor-link" href="#Some-Examples">&#182;</a></h3>
+<h2 id="Implementation-Examples">Implementation Examples<a class="anchor-link" href="#Implementation-Examples">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[105]:</div>
+<div class="prompt input_prompt">In&nbsp;[65]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
@@ -11920,7 +12078,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[95]:</div>
+<div class="prompt input_prompt">In&nbsp;[66]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]))</span>
@@ -11948,7 +12106,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[96]:</div>
+<div class="prompt input_prompt">In&nbsp;[67]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]))</span>
@@ -11976,7 +12134,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[98]:</div>
+<div class="prompt input_prompt">In&nbsp;[68]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">]))</span>
@@ -12004,10 +12162,10 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[101]:</div>
+<div class="prompt input_prompt">In&nbsp;[69]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">]))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
 <span class="n">reset</span><span class="p">()</span>
 </pre></div>
 
@@ -12021,7 +12179,7 @@ div#notebook {
 
 <div class="output_area"><div class="prompt"></div>
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[1, 9]
+<pre>[1, 2, 3, 4, 5, 9]
 </pre>
 </div>
 </div>
@@ -12032,7 +12190,78 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[114]:</div>
+<div class="prompt input_prompt">In&nbsp;[70]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">reset</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>[-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0]
+[1, -1, 2, -2, 3, -3, 2, -2, 1, -1, 0]
+[10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11]
+[1, -1, 2, -2, 3, -3, 2, -2, 1, -1, 0]
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+[True, True, True, True, True, True, True, True, True, True, True]
+All possible form start
+[True, True, True, True, True, True, True, True, True, True, True]
+
+All possible from end
+[True]
+[False, True]
+[True, False, True]
+[True, True, False, True]
+[True, False, True, False, True]
+[True, True, False, True, False, True]
+[True, True, True, False, True, False, True]
+[True, True, True, True, False, True, False, True]
+[True, True, True, True, True, False, True, False, True]
+[True, True, True, True, True, True, True, True, False, True]
+[True, True, True, True, True, True, True, True, True, True, True]
+
+Possible from start and end
+[True]
+[False, True]
+[True, False, True]
+[True, True, False, True]
+[True, False, True, False, True]
+[True, True, False, True, False, True]
+[True, True, True, False, True, False, True]
+[True, True, True, True, False, True, False, True]
+[True, True, True, True, True, False, True, False, True]
+[True, True, True, True, True, True, True, True, False, True]
+[True, True, True, True, True, True, True, True, True, True, True]
+
+[1, 1, 2, 3, 3, 4, 5, 6, 7, 9, 11]
+
+Solution:
+[1, 3, 5, 7, 9, 11]
+
+Traceback:
+[11, 9, 7, 5, 3, 1]
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[71]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">solve</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span>
@@ -12056,8 +12285,10 @@ div#notebook {
 [1, -4, -1, 4, 5, -4, 6, 7, -2]
 [1, 2, 3, 4, 5, 6, 7, 8, 9]
 [True, True, True, False, False, True, False, False, True]
+All possible form start
 [True, False, True, True, True, True, True, True, True]
 
+All possible from end
 [True]
 [False, True]
 [True, False, True]
@@ -12068,19 +12299,24 @@ div#notebook {
 [True, False, False, True, True, False, True, True]
 [True, True, True, False, False, True, False, False, True]
 
-[]
-[False]
-[True, False]
-[True, False, False]
+Possible from start and end
+[True]
+[False, False]
+[True, False, True]
 [True, False, False, True]
-[True, False, True, False, False]
-[True, False, False, True, True, False]
+[True, False, False, True, True]
+[True, False, True, False, False, True]
 [True, False, False, True, True, False, True]
-[True, False, True, False, False, True, False, False]
+[True, False, False, True, True, False, True, True]
+[True, False, True, False, False, True, False, False, True]
 
-[0, 0, 1, 1, 2, 2, 3, 4, 3]
+[1, 0, 2, 2, 3, 3, 4, 5, 4]
 
+Solution:
 [1, 3, 6, 9]
+
+Traceback:
+[9, 6, 3, 1]
 
 </pre>
 </div>
@@ -12090,18 +12326,14 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
 <div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="text_cell_render border-box-sizing rendered_html">
 
 </div>
 </div>
-</div>
-
 </div>
     </div>
   </div>
